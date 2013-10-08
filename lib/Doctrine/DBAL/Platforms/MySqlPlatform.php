@@ -128,7 +128,7 @@ class MySqlPlatform extends AbstractPlatform
      */
     public function getDateSubHourExpression($date, $hours)
     {
-        return 'DATE_SUB(' . $date . ', INTERVAL ' . $hours . ' HOUR)';    
+        return 'DATE_SUB(' . $date . ', INTERVAL ' . $hours . ' HOUR)';
     }
 
     /**
@@ -574,10 +574,14 @@ class MySqlPlatform extends AbstractPlatform
 
         $sql = array();
         $tableSql = array();
-
+        if($diff->fromTable) {
+            $diffTableName = $diff->fromTable->getQuotedName($this);
+        } else {
+            $diffTableName = $diff->name;
+        }
         if ( ! $this->onSchemaAlterTable($diff, $tableSql)) {
             if (count($queryParts) > 0) {
-                $sql[] = 'ALTER TABLE ' . $diff->name . ' ' . implode(", ", $queryParts);
+                $sql[] = 'ALTER TABLE ' . $diffTableName . ' ' . implode(", ", $queryParts);
             }
             $sql = array_merge(
                 $this->getPreAlterTableIndexForeignKeySQL($diff),
@@ -595,7 +599,11 @@ class MySqlPlatform extends AbstractPlatform
     protected function getPreAlterTableIndexForeignKeySQL(TableDiff $diff)
     {
         $sql = array();
-        $table = $diff->name;
+        if($diff->fromTable) {
+            $table = $diff->fromTable->getQuotedName($this);
+        } else {
+            $table = $diff->name;
+        }
 
         foreach ($diff->removedIndexes as $remKey => $remIndex) {
 
@@ -707,7 +715,9 @@ class MySqlPlatform extends AbstractPlatform
 
         if ($table instanceof Table) {
             $table = $table->getQuotedName($this);
-        } else if(!is_string($table)) {
+        } else if(is_string($table)) {
+            $table = $this->quoteSingleIdentifier($table);
+        } else {
             throw new \InvalidArgumentException('MysqlPlatform::getDropIndexSQL() expects $table parameter to be string or \Doctrine\DBAL\Schema\Table.');
         }
 

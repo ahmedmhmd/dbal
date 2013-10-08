@@ -1057,7 +1057,7 @@ abstract class AbstractPlatform
 
     /**
      * Returns the FOR UPDATE expression.
-     * 
+     *
      * @return string
      */
     public function getForUpdateSQL()
@@ -1186,6 +1186,8 @@ abstract class AbstractPlatform
      * @param \Doctrine\DBAL\Schema\Table|string      $table
      *
      * @return string
+     *
+     * @throws \InvalidArgumentException
      */
     public function getDropConstraintSQL($constraint, $table)
     {
@@ -1195,6 +1197,10 @@ abstract class AbstractPlatform
 
         if ($table instanceof Table) {
             $table = $table->getQuotedName($this);
+        } else if(is_string($table)) {
+            $table = $this->quoteSingleIdentifier($table);
+        } else {
+            throw new \InvalidArgumentException('AbstractPlatform::getDropConstraintSQL() expects $table parameter to be string or \Doctrine\DBAL\Schema\Table.');
         }
 
         return 'ALTER TABLE ' . $table . ' DROP CONSTRAINT ' . $constraint;
@@ -1202,11 +1208,13 @@ abstract class AbstractPlatform
 
     /**
      * Returns the SQL to drop a foreign key.
-     * 
+     *
      * @param \Doctrine\DBAL\Schema\ForeignKeyConstraint|string $foreignKey
      * @param \Doctrine\DBAL\Schema\Table|string                $table
      *
      * @return string
+     *
+     * @throws \InvalidArgumentException
      */
     public function getDropForeignKeySQL($foreignKey, $table)
     {
@@ -1216,6 +1224,10 @@ abstract class AbstractPlatform
 
         if ($table instanceof Table) {
             $table = $table->getQuotedName($this);
+        } else if(is_string($table)) {
+            $table = $this->quoteSingleIdentifier($table);
+        } else {
+            throw new \InvalidArgumentException('AbstractPlatform::getDropForeignKeySQL() expects $table parameter to be string or \Doctrine\DBAL\Schema\Table.');
         }
 
         return 'ALTER TABLE ' . $table . ' DROP FOREIGN KEY ' . $foreignKey;
@@ -1432,6 +1444,10 @@ abstract class AbstractPlatform
     {
         if ($table instanceof Table) {
             $table = $table->getQuotedName($this);
+        } else if(is_string($table)) {
+            $table = $this->quoteSingleIdentifier($table);
+        } else {
+            throw new \InvalidArgumentException('AbstractPlatform::getCreateConstraintSQL() expects $table parameter to be string or \Doctrine\DBAL\Schema\Table.');
         }
 
         $query = 'ALTER TABLE ' . $table . ' ADD CONSTRAINT ' . $constraint->getQuotedName($this);
@@ -1474,6 +1490,10 @@ abstract class AbstractPlatform
     {
         if ($table instanceof Table) {
             $table = $table->getQuotedName($this);
+        } else if(is_string($table)) {
+            $table = $this->quoteSingleIdentifier($table);
+        } else {
+            throw new \InvalidArgumentException('AbstractPlatform::getCreateConstraintSQL() expects $table parameter to be string or \Doctrine\DBAL\Schema\Table.');
         }
         $name = $index->getQuotedName($this);
         $columns = $index->getQuotedColumns($this);
@@ -1511,9 +1531,18 @@ abstract class AbstractPlatform
      * @param \Doctrine\DBAL\Schema\Table|string $table
      *
      * @return string
+     *
+     * @throws \InvalidArgumentException
      */
     public function getCreatePrimaryKeySQL(Index $index, $table)
     {
+        if ($table instanceof Table) {
+            $table = $table->getQuotedName($this);
+        } else if(is_string($table)) {
+            $table = $this->quoteSingleIdentifier($table);
+        } else {
+            throw new \InvalidArgumentException('AbstractPlatform::getCreateConstraintSQL() expects $table parameter to be string or \Doctrine\DBAL\Schema\Table.');
+        }
         return 'ALTER TABLE ' . $table . ' ADD PRIMARY KEY (' . $this->getIndexFieldDeclarationListSQL($index->getQuotedColumns($this)) . ')';
     }
 
